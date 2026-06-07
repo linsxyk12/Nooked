@@ -65,10 +65,21 @@ local function _START_AUTH()
     sub.MouseButton1Click:Connect(function()
         sub.Text = "Connecting..."
         local s, r = pcall(function() return game:HttpGet(_URL .. "?key=" .. box.Text) end)
-        if s and Http:JSONDecode(r).status == "success" then
-            _AUTH = true; kgui:Destroy()
-        else
+        
+        if s then -- Requisição HTTP foi bem-sucedida (o servidor respondeu)
+            local ok, json = pcall(Http.JSONDecode, Http, r)
+            if ok and json and json.status == "success" then
+                _AUTH = true; kgui:Destroy()
+                print("[Nocturnal Auth] Autenticação bem-sucedida!")
+                return
+            else
+                -- Servidor respondeu, mas o JSON é inválido ou status não é 'success'
+                sub.Text = "AUTH FAILED"; task.wait(1); sub.Text = "AUTHENTICATE"
+                warn("[Nocturnal Auth] Falha na autenticação (JSON inválido ou status não é 'success'). Resposta: ", r)
+            end
+        else -- Requisição HTTP falhou (problema de rede, timeout, servidor não respondeu)
             sub.Text = "AUTH FAILED"; task.wait(1); sub.Text = "AUTHENTICATE"
+            warn("[Nocturnal Auth] Falha na requisição HTTP (servidor não alcançado ou timeout). Erro: ", r)
         end
     end)
     copy.MouseButton1Click:Connect(function() if setclipboard then setclipboard("https://discord.gg/kxmj9rPNP") end; copy.Text = "Link Copied!" end)
