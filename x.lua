@@ -3,6 +3,8 @@
     NOOKED BY NOC v2.1
     (c) 2026 Nooked.cc Elite Mobile Framework
     Status: PROTECTED / EXECUTABLE
+    Developer: lins9921
+    Auth Key: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIP77TaQKNx58CkcE6Jq4fb3TO6dLhzL1h/+YOgvd2OdY
 ]]
 
 local function _0xNOC(data)
@@ -20,7 +22,7 @@ local function _0xNOC(data)
     end))
 end
 
-local _URL = _0xNOC("aHR0cDovLzEwNC4yOC4xNTIuOTk6NTAwMC92ZXJpZnk=")
+local _URL = _0xNOC("aHR0cDovLzEwNC4yOC4xNTIuOTk6ODA4MC92ZXJpZnk=")
 local _AUTH = false
 
 local function _UI_LOADER()
@@ -64,25 +66,33 @@ local function _START_AUTH()
     copy.Size,copy.Position,copy.Text=UDim2.new(0.8,0,0,30),UDim2.new(0.1,0,0.75,0),"Get Key (Discord)"
     sub.MouseButton1Click:Connect(function()
         sub.Text = "Connecting..."
-        local s, r = pcall(function() return game:HttpGet(_URL .. "?key=" .. box.Text) end)
-        
-        if s then -- Requisição HTTP foi bem-sucedida (o servidor respondeu)
-            local ok, json = pcall(Http.JSONDecode, Http, r)
-            if ok and json and json.status == "success" then
-                _AUTH = true; kgui:Destroy()
-                print("[Nocturnal Auth] Autenticação bem-sucedida!")
-                return
-            else
-                -- Servidor respondeu, mas o JSON é inválido ou status não é 'success'
-                sub.Text = "AUTH FAILED"; task.wait(1); sub.Text = "AUTHENTICATE"
-                warn("[Nocturnal Auth] Falha na autenticação (JSON inválido ou status não é 'success'). Resposta: ", r)
+        task.spawn(function()
+            local s, r = pcall(function() 
+                return game:HttpGet(_URL .. "?key=" .. box.Text, true) 
+            end)
+            
+            if s then
+                local ok, json = pcall(Http.JSONDecode, Http, r)
+                if ok and json and json.status == "success" then
+                    _AUTH = true; kgui:Destroy()
+                    return
+                end
             end
-        else -- Requisição HTTP falhou (problema de rede, timeout, servidor não respondeu)
-            sub.Text = "AUTH FAILED"; task.wait(1); sub.Text = "AUTHENTICATE"
-            warn("[Nocturnal Auth] Falha na requisição HTTP (servidor não alcançado ou timeout). Erro: ", r)
-        end
+
+            -- Se chegou aqui, falhou. r contém o erro técnico.
+            sub.Text = "RETRY"
+            warn("[NOC-DEBUG] Error: " .. tostring(r))
+            box.Text = ""
+            box.PlaceholderText = "Check F9 Console"
+        end)
     end)
-    copy.MouseButton1Click:Connect(function() if setclipboard then setclipboard("https://discord.gg/kxmj9rPNP") end; copy.Text = "Link Copied!" end)
+    copy.MouseButton1Click:Connect(function() 
+        if setclipboard then 
+            setclipboard("https://discord.gg/kxmj9rPNP") 
+            copy.Text = "Link Copied!"
+            task.delay(2, function() copy.Text = "Get Key (Discord)" end)
+        end 
+    end)
 end
 
 task.spawn(function()
